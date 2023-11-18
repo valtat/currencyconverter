@@ -3,7 +3,7 @@ import "./App.css";
 import CurrencyRow from "./CurrencyRow";
 
 const endpoint = "latest";
-const access_key = "d7302e486642251dfeeebbf6890d8a86";
+const access_key = process.env.REACT_APP_EXCHANGE_RATES_API_KEY;
 
 const BASE_URL =
   "http://api.exchangeratesapi.io/v1/" + endpoint + "?access_key=" + access_key;
@@ -15,6 +15,8 @@ function App() {
   const [exchangeRate, setExchangeRate] = useState();
   const [amount, setAmount] = useState(1);
   const [amountInFromCurrency, setAmountInFromCurrency] = useState(true);
+  const [currencies, setCurrencies] = useState({});
+
 
   let toAmount, fromAmount;
   if (amountInFromCurrency) {
@@ -29,21 +31,29 @@ function App() {
     fetch(BASE_URL)
       .then((res) => res.json())
       .then((data) => {
-        const initialCurrency = Object.keys(data.rates)[0];
+        setCurrencies(data);
+        console.log(currencies);
+        const initialCurrency = Object.keys(currencies.rates)[0];
+        setCurrencyOptions([currencies.base, ...Object.keys(currencies.rates)]);
+        setFromCurrency(currencies.base);
+        setToCurrency(initialCurrency);
+        setExchangeRate(currencies.rates[initialCurrency]);
+        /* const initialCurrency = Object.keys(data.rates)[0];
         setCurrencyOptions([data.base, ...Object.keys(data.rates)]);
         setFromCurrency(data.base);
         setToCurrency(initialCurrency);
-        setExchangeRate(data.rates[initialCurrency]);
+        setExchangeRate(data.rates[initialCurrency]); */
       });
   }, []);
 
-  useEffect(() => {
+
+/*   useEffect(() => {
     if (fromCurrency != null && toCurrency != null) {
       fetch(BASE_URL + "&base=" + fromCurrency + "&symbols=" + toCurrency)
         .then((res) => res.json())
         .then((data) => setExchangeRate(data.rates[toCurrency]));
     }
-  }, [fromCurrency, toCurrency]);
+  }, [fromCurrency, toCurrency]); */
 
   function handleFromAmountChange(e) {
     setAmount(e.target.value);
