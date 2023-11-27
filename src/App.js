@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
-import CurrencyRow from "./CurrencyRow";
+import CurrencyRow from "./components/CurrencyRow";
+import CurrencyConverterText from "./components/CurrencyConverterText";
+import TimeStamp from "./components/TimeStamp";
 
 const endpoint = "latest";
 const access_key = process.env.REACT_APP_EXCHANGE_RATES_API_KEY;
 
-const BASE_URL =
-  "http://api.exchangeratesapi.io/v1/" + endpoint + "?access_key=" + access_key;
+const params = {
+  access_key: access_key,
+  endpoint: endpoint,
+};
+
+const BASE_URL = `http://api.exchangeratesapi.io/v1/${params.endpoint}?access_key=${params.access_key}`;
 
 function App() {
   const [currencyOptions, setCurrencyOptions] = useState([]);
@@ -14,17 +20,16 @@ function App() {
   const [toCurrency, setToCurrency] = useState();
   const [exchangeRate, setExchangeRate] = useState();
   const [amount, setAmount] = useState(1);
-  const [amountInFromCurrency, setAmountInFromCurrency] = useState(true);
+  const [isAmountInFromCurrency, setAmountInFromCurrency] = useState(true);
   const [currencies, setCurrencies] = useState({});
 
-
-  let toAmount, fromAmount;
-  if (amountInFromCurrency) {
-    fromAmount = amount;
-    toAmount = amount * exchangeRate;
+  let inputAmount, outputAmount;
+  if (isAmountInFromCurrency) {
+    outputAmount = amount;
+    inputAmount = amount * exchangeRate;
   } else {
-    fromAmount = amount / exchangeRate;
-    toAmount = amount;
+    outputAmount = amount / exchangeRate;
+    inputAmount = amount;
   }
 
   useEffect(() => {
@@ -32,28 +37,31 @@ function App() {
       .then((res) => res.json())
       .then((data) => {
         setCurrencies(data);
-        console.log(currencies);
-        const initialCurrency = Object.keys(currencies.rates)[0];
-        setCurrencyOptions([currencies.base, ...Object.keys(currencies.rates)]);
-        setFromCurrency(currencies.base);
-        setToCurrency(initialCurrency);
-        setExchangeRate(currencies.rates[initialCurrency]);
-        /* const initialCurrency = Object.keys(data.rates)[0];
+        const initialCurrency = Object.keys(data.rates)[0];
         setCurrencyOptions([data.base, ...Object.keys(data.rates)]);
         setFromCurrency(data.base);
         setToCurrency(initialCurrency);
-        setExchangeRate(data.rates[initialCurrency]); */
+        setExchangeRate(data.rates[initialCurrency]);
       });
   }, []);
 
-
-/*   useEffect(() => {
-    if (fromCurrency != null && toCurrency != null) {
-      fetch(BASE_URL + "&base=" + fromCurrency + "&symbols=" + toCurrency)
-        .then((res) => res.json())
-        .then((data) => setExchangeRate(data.rates[toCurrency]));
+  useEffect(() => {
+    if (fromCurrency != null && toCurrency != null && currencies != null) {
+      const rate = calculateExchangeRate(fromCurrency, toCurrency);
+      if (rate !== null) {
+        setExchangeRate(rate);
+      }
     }
-  }, [fromCurrency, toCurrency]); */
+  }, [fromCurrency, toCurrency, currencies]);
+
+  function calculateExchangeRate(fromCurrency, toCurrency) {
+    if (currencies && currencies.rates) {
+      const rateFromBase = currencies.rates[fromCurrency];
+      const rateToBase = currencies.rates[toCurrency];
+      return rateToBase / rateFromBase;
+    }
+    return null;
+  }
 
   function handleFromAmountChange(e) {
     setAmount(e.target.value);
@@ -67,22 +75,25 @@ function App() {
 
   return (
     <>
-      <h1>Convert</h1>
-      <CurrencyRow
-        currencyOptions={currencyOptions}
-        selectedCurrency={fromCurrency}
-        onChangeCurrency={(e) => setFromCurrency(e.target.value)}
-        onChangeAmount={handleFromAmountChange}
-        amount={fromAmount}
-      />
-      <div className="equals">=</div>
-      <CurrencyRow
-        currencyOptions={currencyOptions}
-        selectedCurrency={toCurrency}
-        onChangeCurrency={(e) => setToCurrency(e.target.value)}
-        onChangeAmount={handleToAmountChange}
-        amount={toAmount}
-      />
+      <div className="container">
+        <CurrencyConverterText />
+        <CurrencyRow
+          currencyOptions={currencyOptions}
+          selectedCurrency={fromCurrency}
+          onChangeCurrency={(e) => setFromCurrency(e.target.value)}
+          onChangeAmount={handleFromAmountChange}
+          amount={outputAmount}
+        />
+        <div className="equals">=</div>
+        <CurrencyRow
+          currencyOptions={currencyOptions}
+          selectedCurrency={toCurrency}
+          onChangeCurrency={(e) => setToCurrency(e.target.value)}
+          onChangeAmount={handleToAmountChange}
+          amount={inputAmount}
+        />
+        <TimeStamp timestamp={currencies?.timestamp} />
+      </div>
     </>
   );
 }
