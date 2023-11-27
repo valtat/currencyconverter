@@ -3,64 +3,34 @@ import "./App.css";
 import CurrencyRow from "./components/CurrencyRow";
 import CurrencyConverterText from "./components/CurrencyConverterText";
 import TimeStamp from "./components/TimeStamp";
+import useCurrencyConverter from "./components/useCurrencyConverter";
 
 const endpoint = "latest";
 const access_key = process.env.REACT_APP_EXCHANGE_RATES_API_KEY;
 
-const params = {
-  access_key: access_key,
-  endpoint: endpoint,
-};
-
-const BASE_URL = `http://api.exchangeratesapi.io/v1/${params.endpoint}?access_key=${params.access_key}`;
-
 function App() {
-  const [currencyOptions, setCurrencyOptions] = useState([]);
-  const [fromCurrency, setFromCurrency] = useState();
-  const [toCurrency, setToCurrency] = useState();
-  const [exchangeRate, setExchangeRate] = useState();
-  const [amount, setAmount] = useState(1);
-  const [isAmountInFromCurrency, setAmountInFromCurrency] = useState(true);
-  const [currencies, setCurrencies] = useState({});
+  const {
+    timestamp,
+    currencyOptions,
+    fromCurrency,
+    toCurrency,
+    exchangeRate,
+    amount,
+    isAmountInFromCurrency,
+    setFromCurrency,
+    setToCurrency,
+    setAmount,
+    setAmountInFromCurrency,
+    currencies,
+  } = useCurrencyConverter(endpoint, access_key);
 
   let inputAmount, outputAmount;
   if (isAmountInFromCurrency) {
     outputAmount = amount;
     inputAmount = amount * exchangeRate;
   } else {
-    outputAmount = amount / exchangeRate;
     inputAmount = amount;
-  }
-
-  useEffect(() => {
-    fetch(BASE_URL)
-      .then((res) => res.json())
-      .then((data) => {
-        setCurrencies(data);
-        const initialCurrency = Object.keys(data.rates)[0];
-        setCurrencyOptions([data.base, ...Object.keys(data.rates)]);
-        setFromCurrency(data.base);
-        setToCurrency(initialCurrency);
-        setExchangeRate(data.rates[initialCurrency]);
-      });
-  }, []);
-
-  useEffect(() => {
-    if (fromCurrency != null && toCurrency != null && currencies != null) {
-      const rate = calculateExchangeRate(fromCurrency, toCurrency);
-      if (rate !== null) {
-        setExchangeRate(rate);
-      }
-    }
-  }, [fromCurrency, toCurrency, currencies]);
-
-  function calculateExchangeRate(fromCurrency, toCurrency) {
-    if (currencies && currencies.rates) {
-      const rateFromBase = currencies.rates[fromCurrency];
-      const rateToBase = currencies.rates[toCurrency];
-      return rateToBase / rateFromBase;
-    }
-    return null;
+    outputAmount = amount / exchangeRate;
   }
 
   function handleFromAmountChange(e) {
@@ -92,7 +62,7 @@ function App() {
           onChangeAmount={handleToAmountChange}
           amount={inputAmount}
         />
-        <TimeStamp timestamp={currencies?.timestamp} />
+        <TimeStamp timestamp={timestamp} />
       </div>
     </>
   );
