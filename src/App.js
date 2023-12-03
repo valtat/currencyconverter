@@ -3,7 +3,7 @@ import "./App.css";
 import CurrencyRow from "./components/CurrencyRow";
 import CurrencyConverterText from "./components/CurrencyConverterText";
 import TimeStamp from "./components/TimeStamp";
-import useCurrencyConverter from "./components/useCurrencyConverter";
+import useCurrencyConverter from "./hooks/useCurrencyConverter";
 
 const endpoint = "latest";
 const access_key = process.env.REACT_APP_EXCHANGE_RATES_API_KEY;
