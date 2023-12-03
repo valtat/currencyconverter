@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from "react";
 import "./App.css";
 import CurrencyRow from "./components/CurrencyRow";
 import CurrencyConverterText from "./components/CurrencyConverterText";
@@ -21,7 +20,6 @@ function App() {
     setToCurrency,
     setAmount,
     setAmountInFromCurrency,
-    currencies,
   } = useCurrencyConverter(endpoint, access_key);
 
   let inputAmount, outputAmount;
