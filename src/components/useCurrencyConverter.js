@@ -1,5 +1,15 @@
 import { useState, useEffect } from "react";
 
+function calculateExchangeRate(currencies, fromCurrency, toCurrency) {
+  if (fromCurrency === currencies.base) {
+    return currencies.rates[toCurrency];
+  } else if (toCurrency === currencies.base) {
+    return 1 / currencies.rates[fromCurrency];
+  } else {
+    return currencies.rates[toCurrency] / currencies.rates[fromCurrency];
+  }
+}
+
 export default function useCurrencyConverter(endpoint, access_key) {
   const [currencyOptions, setCurrencyOptions] = useState([]);
   const [fromCurrency, setFromCurrency] = useState();
@@ -28,22 +38,12 @@ export default function useCurrencyConverter(endpoint, access_key) {
 
   useEffect(() => {
     if (fromCurrency != null && toCurrency != null && currencies != null) {
-      const rate = calculateExchangeRate(fromCurrency, toCurrency);
+      const rate = calculateExchangeRate(currencies, fromCurrency, toCurrency);
       if (rate !== null) {
         setExchangeRate(rate);
       }
     }
   }, [fromCurrency, toCurrency, currencies]);
-
-  function calculateExchangeRate(fromCurrency, toCurrency) {
-    if (fromCurrency === currencies.base) {
-      return currencies.rates[toCurrency];
-    } else if (toCurrency === currencies.base) {
-      return 1 / currencies.rates[fromCurrency];
-    } else {
-      return currencies.rates[toCurrency] / currencies.rates[fromCurrency];
-    }
-  }
 
   return {
     timestamp,
