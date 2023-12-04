@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 
 function calculateExchangeRate(currencies, fromCurrency, toCurrency) {
+  if (!currencies || !currencies.rates) {
+    return;
+  }
   if (fromCurrency === currencies.base) {
     return currencies.rates[toCurrency];
   } else if (toCurrency === currencies.base) {
@@ -10,52 +13,28 @@ function calculateExchangeRate(currencies, fromCurrency, toCurrency) {
   }
 }
 
-export default function useCurrencyConverter(endpoint, access_key) {
-  const [currencyOptions, setCurrencyOptions] = useState([]);
-  const [fromCurrency, setFromCurrency] = useState();
-  const [toCurrency, setToCurrency] = useState();
-  const [exchangeRate, setExchangeRate] = useState();
-  const [amount, setAmount] = useState(1);
-  const [isAmountInFromCurrency, setAmountInFromCurrency] = useState(true);
-  const [currencies, setCurrencies] = useState({});
-  const [timestamp, setTimestamp] = useState();
-
-  useEffect(() => {
-    fetch(
-      `http://api.exchangeratesapi.io/v1/${endpoint}?access_key=${access_key}`
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        setCurrencies(data);
-        setTimestamp(data.timestamp);
-        const initialCurrency = Object.keys(data.rates)[0];
-        setCurrencyOptions([data.base, ...Object.keys(data.rates)]);
-        setFromCurrency(data.base);
-        setToCurrency(initialCurrency);
-        setExchangeRate(data.rates[initialCurrency]);
-      });
-  }, []);
+const useCurrencyConverter = (
+  currencies,
+  fromCurrency,
+  toCurrency,
+  initialRate
+) => {
+  const [exchangeRate, setRate] = useState(initialRate);
 
   useEffect(() => {
     if (fromCurrency != null && toCurrency != null && currencies != null) {
-      const rate = calculateExchangeRate(currencies, fromCurrency, toCurrency);
-      if (rate !== null) {
-        setExchangeRate(rate);
+      const calculatedRate = calculateExchangeRate(
+        currencies,
+        fromCurrency,
+        toCurrency
+      );
+      if (calculatedRate !== exchangeRate) {
+        setRate(calculatedRate);
       }
     }
-  }, [fromCurrency, toCurrency, currencies]);
+  }, [fromCurrency, toCurrency, currencies, exchangeRate]);
 
-  return {
-    timestamp,
-    currencyOptions,
-    fromCurrency,
-    toCurrency,
-    exchangeRate,
-    amount,
-    isAmountInFromCurrency,
-    setFromCurrency,
-    setToCurrency,
-    setAmount,
-    setAmountInFromCurrency,
-  };
-}
+  return { exchangeRate, calculateExchangeRate };
+};
+
+export default useCurrencyConverter;
